@@ -1,0 +1,46 @@
+---
+stages:
+  - commit
+  - syntax
+  - docker
+
+# commit
+git-history:
+  stage: commit
+  script:
+    - >
+      bash <(curl -s
+      https://gitlab.com/yue-script/checks/raw/master/check_git_history.sh)
+
+lines-length:
+  stage: commit
+  script:
+    - >
+      bash <(curl -s
+      https://gitlab.com/yue-script/checks/raw/master/check_lines_length.sh)
+      80 gitwatch.sh
+
+# syntax
+docker-lint:
+  stage: syntax
+  image: vpgrp/linter:docker
+  script:
+    - docker-lint Dockerfile
+
+shellcheck:
+  stage: syntax
+  image: vpgrp/linter:shell
+  script:
+    - shellcheck entrypoint.sh
+
+# docker
+build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay
+  script:
+    - docker build --rm .
+# EOF
